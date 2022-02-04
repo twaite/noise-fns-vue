@@ -1,5 +1,4 @@
 <template>
-  <h1>Noise Generator</h1>
   <Canvas />
 </template>
 
@@ -15,3 +14,8 @@ export default defineComponent({
 });
 </script>
 
+<style lang="postcss">
+#app {
+  @apply h-screen w-screen bg-gray-800 flex;
+}
+</style>
