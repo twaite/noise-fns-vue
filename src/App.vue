@@ -1,15 +1,15 @@
 <template>
-  <Canvas />
+  <nf-canvas />
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import Canvas from '@/components/canvas.vue';
+import NfCanvas from '@/components/nf-canvas.vue';
 
 export default defineComponent({
   name: 'App',
   components: {
-    Canvas
+    NfCanvas
   }
 });
 </script>

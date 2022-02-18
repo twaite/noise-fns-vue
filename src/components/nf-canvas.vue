@@ -3,17 +3,31 @@
     <h1>Noise Generator</h1>
     <canvas ref="canvas" :height="HEIGHT" :width="WIDTH" />
   </div>
-  <div class="sidebar">
+  <div class="sidebar col">
+    <div class="row inputs">
+      <div class="col w-full">
+        <div class="row">
+          <label>Noise Function</label>
+        </div>
+        <div class="row">
+          <select class="select" v-model="noiseType">
+            <option v-for="opt in options" :key="opt.key" :value="opt.name">
+              {{opt.name}}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
     <div class="row">
-      <button class="btn" @click="generateRandomNoise">Generate Random Noise</button>
-      <button class="btn" @click="generatePerlinNoise">Generate Perlin Noise</button>
+      <button class="btn" @click="generate">Generate</button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
-import { perlin2 } from '@/utils/perlin';
+
+import { perlin2, simplex2, seed } from '@/utils/perlin';
 
 const HEIGHT = window.innerHeight - 100;
 const WIDTH = window.innerWidth - 350;
@@ -22,6 +36,22 @@ export default defineComponent({
   name: 'Canvas',
   setup() {
     const canvas = ref<HTMLCanvasElement | null>(null);
+    const noiseType = ref('random');
+
+    const options = [
+      {
+        name: 'Random',
+        fn: generateRandomNoise,
+      },
+      {
+        name: 'Perlin',
+        fn: generatePerlinNoise,
+      },
+      {
+        name: 'Simplex',
+        fn: generateSimplexNoise,
+      },
+    ]
 
     onMounted(() => {
       generateRandomNoise();
@@ -42,7 +72,33 @@ export default defineComponent({
       }
     }
 
+    function generateSimplexNoise() {
+      seed(Math.random());
+
+      const ctx = canvas.value?.getContext('2d');
+      const image = ctx?.getImageData(0, 0, WIDTH, HEIGHT);
+      const data = image?.data;
+
+      if (data?.length && image && data) {
+
+        for (let x = 0; x < WIDTH; x++) {
+          for (let y = 0; y < HEIGHT; y++) {
+            const cell = (x + y * WIDTH) * 4;
+
+            let value = Math.abs(simplex2(x / 100, y / 100));
+            value *= 256;
+
+            updateColor(data, cell, value, value, value, 255);
+          }
+        }
+
+        ctx?.putImageData(image, 0, 0);
+      }
+    }
+    
     function generatePerlinNoise() {
+      seed(Math.random());
+
       const ctx = canvas.value?.getContext('2d');
       const image = ctx?.getImageData(0, 0, WIDTH, HEIGHT);
       const data = image?.data;
@@ -64,12 +120,17 @@ export default defineComponent({
       }
     }
 
+    function generate() {
+      options.find(v => v.name === noiseType.value)?.fn();
+    }
+
     return {
+      noiseType,
       canvas,
       HEIGHT,
       WIDTH,
-      generateRandomNoise,
-      generatePerlinNoise
+      options,
+      generate
     }
   }
 });
@@ -96,6 +157,30 @@ function updateColor(data: Uint8ClampedArray, cell: number, r: number, g: number
 }
 
 .btn {
-  @apply bg-purple-500 rounded px-3 py-2;
+  @apply bg-purple-500 rounded px-3 py-2 w-full;
+}
+
+.col {
+  @apply flex flex-col;
+}
+
+.row {
+  @apply flex;
+}
+
+.inputs {
+  @apply flex-grow;
+}
+
+.select {
+  @apply py-2 px-3 w-full rounded outline-none bg-gray-900 text-white;
+}
+
+.sidebar {
+  @apply flex-grow p-3 pl-0;
+}
+
+label {
+  @apply text-white;
 }
 </style>
